@@ -1,9 +1,10 @@
 #include <stdio.h>
-#include <unistd.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
-#define BUF_SZ 8192
+#define BUF_SZ      8192
+#define MAX_LINE_SZ 65536
 
 typedef struct
 {
@@ -12,10 +13,17 @@ typedef struct
    size_t buffer_valid_bytes;
    size_t pos;
 
-   char *partial_line;
+   char partial_line[MAX_LINE_SZ];
    size_t partial_len;
-   size_t partial_cap;
 } scanner_t;
+
+void
+scanner_init (scanner_t *s, int fd)
+{
+   s->fd                 = fd;
+   s->buffer_valid_bytes = 0;
+   s->partial_len        = 0;
+}
 
 void
 process_buffer (scanner_t *s, const char *query)
@@ -28,33 +36,26 @@ process_buffer (scanner_t *s, const char *query)
             {
                size_t segment_len = i - start;
 
-               size_t total_len = s->partial_len + segment_len;
-               char *line       = malloc (total_len + 1);
-
-               memcpy (line, s->partial_line, s->partial_len);
-               memcpy (line + s->partial_len, &s->buffer[start], segment_len);
-               line[total_len] = '\0';
-
-               if (strstr (line, query))
+               if (s->partial_len + segment_len < MAX_LINE_SZ)
                   {
-                     printf("%s\n", line);
+                     memcpy (s->partial_line + s->partial_len, s->buffer + start, segment_len);
+                     s->partial_line[s->partial_len + line_len] = '\0';
+
+                     if (strstr (line, query))
+                        {
+                           printf ("%s\n", line);
+                        }
                   }
 
-               free (line);
                s->partial_len = 0;
-               start = i + 1;
+               start          = i + 1;
             }
       }
 
-   if (save < s->buffer_valid_bytes)
+   size_t rem = s->buffer_valid_bytes - start;
+   if (rem > 0 && s->partial_len + rem < MAX_LINE_SZ)
       {
-         size_t rem = s->buffer_valid_bytes - start;
-         if (s->partial_len + rem >= s->partial_cap)
-            {
-               s->partial_cap = s->partial_len + rem + 1024;
-               s->partial_line = realloc(s->partial_len, &s->buffer[start], rem);
-            }
-         memcpy (s->partial_line + s->partial_len, &s->buffer[start], rem);
+         memcpy (s->partial_line s + partial_len, s->buffer + start, rem);
          s->partial_len += rem;
       }
 }
