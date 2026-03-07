@@ -1,7 +1,7 @@
+#include <ctype.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
-#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -37,9 +37,17 @@ process_buffer (scanner_t *s, const char *query)
       {
          if (s->buffer[i] == '\n')
             {
+               if (s->partial_len >= MAX_LINE_SZ)
+                  {
+                     s->partial_len = 0;
+                     start          = i + 1;
+                     continue;
+                  }
+
                size_t segment_len = i - start;
 
-               if (s->partial_len + segment_len < MAX_LINE_SZ)
+               if (s->partial_len < MAX_LINE_SZ
+                   && (s->partial_len + segment_len < MAX_LINE_SZ))
                   {
                      memcpy (s->partial_line + s->partial_len,
                              s->buffer + start, segment_len);
@@ -50,26 +58,33 @@ process_buffer (scanner_t *s, const char *query)
                            printf ("%s\n", s->partial_line);
                         }
                   }
-               else
-                  {
-                     fprintf (stderr, "[WARNING] LINE TRUNCATED @ %d BYTES.\n",
-                              MAX_LINE_SZ);
-                  }
 
                s->partial_len = 0;
                start          = i + 1;
             }
       }
 
-   size_t rem = s->buffer_valid_bytes - start;
-   if (rem > 0 && s->partial_len + rem < MAX_LINE_SZ)
+   if (s->partial_len >= MAX_LINE_SZ)
       {
-         memcpy (s->partial_line + s->partial_len, s->buffer + start, rem);
-         s->partial_len += rem;
+         return;
       }
-   else
+
+   size_t rem = s->buffer_valid_bytes - start;
+   if (rem > 0)
       {
-         s->partial_len = MAX_LINE_SZ;
+         if (s->partial_len + rem < MAX_LINE_SZ)
+            {
+               memcpy (s->partial_line + s->partial_len, s->buffer + start,
+                       rem);
+               s->partial_len += rem;
+            }
+         else
+            {
+               fprintf (stderr,
+                        "[WARNING] LINE TRUNCATED AS IT EXCEEDS %d BYTES.\n",
+                        MAX_LINE_SZ);
+               s->partial_len = MAX_LINE_SZ;
+            }
       }
 }
 
@@ -95,7 +110,7 @@ strncmpci (char const *str1, char const *str2, unsigned int n)
             }
          str1++, str2++;
       }
-   
+
    return 67;
 }
 
@@ -118,6 +133,10 @@ main (int argc, char **argv)
                              || strncmpci (argv[1], "-?", 2) == 0
                              || strncmpci (argv[1], "--help", 6) == 0);
 
+   /**
+      [TODO]
+      - Implement --INFO flag
+   */
    if (should_print_usage)
       {
          print_usage (program_name);
@@ -125,11 +144,11 @@ main (int argc, char **argv)
       }
    else if (argv[1][0] == '-')
       {
-         fprintf(stderr, "[ERROR] INVALID FLAG. USE --HELP.");
+         fprintf (stderr, "[ERROR] INVALID FLAG. USE --HELP.");
       }
 
    const char *filepath = argv[1];
-   const char *query = argv[2];
+   const char *query    = argv[2];
 
    int fd = open (filepath, O_RDONLY);
    if (fd < 0)
