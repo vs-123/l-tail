@@ -1,16 +1,22 @@
 * L-TAIL
 
-*L-Tail* stands for *Log-Tail*. L-Tail is a simple, memory-efficient, POSIX-compliant, high-performance, log-scanning utility tool for stream monitoring. This project utilises buffered I/O and non-blocking polling to provide real-time stream monitoring with a minimal resident set size.
+L-Tail is a memory-efficient, POSIX-compliant, high-performance, log-scanning utility tool for stream monitoring written in C99. This project utilises buffered I/O and non-blocking polling to provide real-time stream monitoring with a minimal resident set size.
+
+*L-Tail* stands for *Log-Tail*.
 
 ** FEATURES
 
-- *[FIXED MEMORY FOOTPRINT]* Operates with a constant memory overhead of =O(1)= space complexity relative to file size. This is achieved by processing the stream in fixed-size chunks and prevents system performance degradation when scanning gigabyte-scale log files.
+- *[FIXED MEMORY FOOTPRINT]*
+  Operates with a constant memory overhead of =O(1)= space complexity relative to file size. This is achieved by processing the stream in fixed-size chunks and prevents system performance degradation when scanning gigabyte-scale log files.
 
-- *[BUFFERED STREAM PROCESSING]* Implements a custom buffering mechanism that handles partial line segments across read boundaries. This ensures data integrity for logs with multi-line payloads or irregular record lengths.
+- *[BUFFERED STREAM PROCESSING]*
+  Implements a custom buffering mechanism that handles partial line segments across read boundaries. This ensures data integrity for logs with multi-line payloads or irregular record lengths.
 
-- *[NON-BLOCKING POLLING]* Equipped with a non-blocking mode similar to =tail -f=. This mode periodically polls file descriptor for new content, which allows for live monitoring WITHOUT relying on platform-specific kernel event APIs like =inotify= or =kqueue=.
+- *[NON-BLOCKING POLLING]*
+  Equipped with a non-blocking mode similar to =tail -f=. This mode periodically polls file descriptor for new content, which allows for live monitoring WITHOUT relying on platform-specific kernel event APIs like =inotify= or =kqueue=.
 
-- *[POSIX COMPLIANT]* Developed in C99 without any GNU extensions. This ensures high portability across various *nix systems without relying on external dependencies.
+- *[POSIX COMPLIANT]*
+  Developed in C99 without any GNU extensions. This ensures high portability across various *nix systems without relying on external dependencies.
 
 ** LICENSE
 
