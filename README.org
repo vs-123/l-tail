@@ -1,0 +1,12 @@
+* L-Tail
+
+*L-Tail* stands for *Log-Tail*. A memory-efficient, C99-compliant log scanner that handles large files by processing them in chunks with a focus on a follow-mode implementation.
+
+** LICENSE
+
+This project is licensed under the GNU Affero General Public License.
+
+*NO WARRANTY PROVIDED*
+
+For more information, see =LICENSE= file or visit https://www.gnu.org/licenses/agpl-3.0.en.html.
+
