@@ -26,15 +26,23 @@ process_buffer (scanner_t *s, const char *query)
       {
          if (s->buffer[i] == '\n')
             {
-               start = i + 1;
+               size_t segment_len = i - start;
 
-               /**
-                  [TODO]
-                  - combine =s->partial_line= with the segment from start to =i=
-                  - search for =query=
-                  - print when match found
-		  - reset partial_line
-	       */
+               size_t total_len = s->partial_len + segment_len;
+               char *line       = malloc (total_len + 1);
+
+               memcpy (line, s->partial_line, s->partial_len);
+               memcpy (line + s->partial_len, &s->buffer[start], segment_len);
+               line[total_len] = '\0';
+
+               if (strstr (line, query))
+                  {
+                     printf("%s\n", line);
+                  }
+
+               free (line);
+               s->partial_len = 0;
+               start = i + 1;
             }
       }
 
