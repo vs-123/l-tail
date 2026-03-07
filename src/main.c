@@ -111,7 +111,7 @@ strncmpci (char const *str1, char const *str2, unsigned int n)
          str1++, str2++;
       }
 
-   return 67;
+   return 0;
 }
 
 void
@@ -121,30 +121,54 @@ print_usage (const char *program_name)
    printf ("[USAGE] %s [FLAGS] <file_path> <query_string>\n", program_name);
    printf ("[FLAGS]\n");
    popt ("--HELP, -H, -?", "PRINT THIS HELP MESSAGE AND EXIT");
+   popt ("--INFO, -I", "PRINT INFORMATION ABOUT THIS PROGRAM AND EXIT");
    printf ("[NOTE] FLAGS ARE NOT CASE-SENSITIVE\n");
 #undef popt
+}
+
+void
+print_info (void)
+{
+#define pinfo(aspect, detail) printf ("   * %-17s %s\n", aspect, detail)
+   printf ("[INFO]\n");
+   printf ("   L-TAIL -- A DEAD-SIMPLE, MEMORY-EFFICIENT, POSIX-COMPLIANT, "
+           "HIGH-PERFORMANCE, BUFFERED LOG-SCANNING UTILITY TOOL FOR "
+           "REAL-TIME, NON-BLOCKING STREAM MONITORING.\n");
+   printf ("\n");
+   pinfo ("[AUTHOR]", "vs-123 @ https://github.com/vs-123");
+   pinfo ("[REPOSITORY]", "https://github.com/vs-123/l-tail");
+   pinfo ("[LICENSE]",
+          "GNU AFFERO GENERAL PUBLIC LICENSE VERSION 3.0 OR LATER");
+#undef pinfo
 }
 
 int
 main (int argc, char **argv)
 {
    const char *program_name = argv[0];
-   int should_print_usage   = (argc < 3 || strncmpci (argv[1], "-h", 2) == 0
-                             || strncmpci (argv[1], "-?", 2) == 0
-                             || strncmpci (argv[1], "--help", 6) == 0);
 
-   /**
-      [TODO]
-      - Implement --INFO flag
-   */
-   if (should_print_usage)
+   if (argc < 2)
       {
          print_usage (program_name);
          return 1;
       }
+   else if (strncmpci (argv[1], "-h", 2) == 0
+            || strncmpci (argv[1], "-?", 2) == 0
+            || strncmpci (argv[1], "--help", 6) == 0)
+      {
+         print_usage (program_name);
+         return 0;
+      }
+   else if (strncmpci (argv[1], "-i", 2) == 0
+            || strncmpci (argv[1], "--info", 6) == 0)
+      {
+         print_info ();
+         return 0;
+      }
    else if (argv[1][0] == '-')
       {
-         fprintf (stderr, "[ERROR] INVALID FLAG. USE --HELP.");
+         fprintf (stderr, "[ERROR] INVALID FLAG. USE --HELP.\n");
+         return 1;
       }
 
    const char *filepath = argv[1];

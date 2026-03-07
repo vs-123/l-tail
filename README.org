@@ -1,6 +1,10 @@
-* L-Tail
+* L-TAIL
 
-*L-Tail* stands for *Log-Tail*. A memory-efficient, C99-compliant log scanner that handles large files by processing them in chunks with a focus on a follow-mode implementation.
+*L-Tail* stands for *Log-Tail*. L-Tail is a simple, memory-efficient, POSIX-compliant, high-performance, log-scanning utility tool for stream monitoring. This project utilises buffered I/O and non-blocking polling to provide real-time stream monitoring with a minimal resident set size.
+
+** FEATURES
+
+
 
 ** LICENSE
 
