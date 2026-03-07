@@ -46,11 +46,17 @@ process_buffer (scanner_t *s, const char *query)
             }
       }
 
-   /**
-      [TODO]
-      - handle reamining bytes
-      - move =s->buffer[start..valid_bytes]= to =s->partial_line=
-   */
+   if (save < s->buffer_valid_bytes)
+      {
+         size_t rem = s->buffer_valid_bytes - start;
+         if (s->partial_len + rem >= s->partial_cap)
+            {
+               s->partial_cap = s->partial_len + rem + 1024;
+               s->partial_line = realloc(s->partial_len, &s->buffer[start], rem);
+            }
+         memcpy (s->partial_line + s->partial_len, &s->buffer[start], rem);
+         s->partial_len += rem;
+      }
 }
 
 int
