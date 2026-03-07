@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,11 +40,11 @@ process_buffer (scanner_t *s, const char *query)
                if (s->partial_len + segment_len < MAX_LINE_SZ)
                   {
                      memcpy (s->partial_line + s->partial_len, s->buffer + start, segment_len);
-                     s->partial_line[s->partial_len + line_len] = '\0';
+                     s->partial_line[s->partial_len + segment_len] = '\0';
 
-                     if (strstr (line, query))
+                     if (strstr (s->partial_line, query))
                         {
-                           printf ("%s\n", line);
+                           printf ("%s\n", s->partial_line);
                         }
                   }
 
@@ -55,7 +56,7 @@ process_buffer (scanner_t *s, const char *query)
    size_t rem = s->buffer_valid_bytes - start;
    if (rem > 0 && s->partial_len + rem < MAX_LINE_SZ)
       {
-         memcpy (s->partial_line s + partial_len, s->buffer + start, rem);
+         memcpy (s->partial_line + s->partial_len, s->buffer + start, rem);
          s->partial_len += rem;
       }
 }
@@ -63,6 +64,25 @@ process_buffer (scanner_t *s, const char *query)
 int
 main (void)
 {
-   printf ("Hello, World!\n");
+   int fd = open (".test.log", O_RDONLY);
+   if (fd < 0)
+      {
+         fprintf (stderr, "[ERROR] =open=");
+         return 1;
+      }
+
+   scanner_t s;
+   scanner_init (&s, fd);
+
+   const char *query = "INFO";
+
+   ssize_t bytes_read;
+   while ((bytes_read = read (fd, s.buffer, BUF_SZ)) > 0)
+      {
+         s.buffer_valid_bytes = (size_t)bytes_read;
+         process_buffer (&s, query);
+      }
+
+   close (fd);
    return 0;
 }
