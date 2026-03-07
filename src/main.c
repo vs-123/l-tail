@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <unistd.h>
 
 #define BUF_SZ      8192
@@ -49,7 +50,7 @@ process_buffer (scanner_t *s, const char *query)
                   }
                else
                   {
-                     fprintf(stderr, "[WARNING] LINE TRUNCATED @ %d BYTES.", MAX_LINE_SZ);
+                     fprintf(stderr, "[WARNING] LINE TRUNCATED @ %d BYTES.\n", MAX_LINE_SZ);
                   }
 
                s->partial_len = 0;
@@ -69,13 +70,22 @@ process_buffer (scanner_t *s, const char *query)
       }
 }
 
+volatile sig_atomic_t should_watch = 1;
+
+void
+sigint_handler (int signal)
+{
+   should_watch = 0;
+   fprintf(stderr, "[ERROR] CAUGHT SIGINT\n");
+}
+
 int
 main (void)
 {
    int fd = open (".test.log", O_RDONLY);
    if (fd < 0)
       {
-         fprintf (stderr, "[ERROR] =open=");
+         fprintf (stderr, "[ERROR] =open=\n");
          return 1;
       }
 
@@ -84,7 +94,9 @@ main (void)
 
    const char *query = "INFO";
 
-   while (1) {
+   signal(SIGINT, sigint_handler);
+
+   while (should_watch) {
       ssize_t bytes_read = read (fd, s.buffer, BUF_SZ);
       if (bytes_read > 0)
          {
@@ -94,15 +106,17 @@ main (void)
       else if (bytes_read == 0)
          {
             /* reached EOF */
-            usleep(100'000);
+            usleep(100000);
          }
       else
          {
-            fprintf (stderr, "[ERROR] =read=");
+            fprintf (stderr, "[ERROR] =read=\n");
             break;
          }
    }
 
    close (fd);
+   printf ("[INFO] EXITING...\n");
+   
    return 0;
 }
