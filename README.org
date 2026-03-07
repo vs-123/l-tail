@@ -25,22 +25,18 @@ L-Tail is a memory-efficient, POSIX-compliant, high-performance, log-scanning ut
 ** BUILD INSTRUCTIONS
 
 #+begin_example
-  # Obtain a local copy of this repository with =git clone= and enter it
+  % # Obtain a local copy of this repository with =git clone= and enter it
   % git clone https://github.com/vs-123/l-tail.git
-  % ls -F
-  l-tail/
   % cd l-tail
-  % pwd
-  /home/vs/l-tail
 
-  # Make a build directory and build this project with =cmake= inside it
+  % # Make a build directory and build this project with =cmake= inside it
   % mkdir build && cd build
   % cmake ..
   % cmake --build .
   % ls -F
-  l-tail* compile_commands.json Makefile CMakeCache.txt
+  l-tail*  compile_commands.json  Makefile  CMakeCache.txt
 
-  # You may now use the generated binary =l-tail=
+  % # You may now use the generated binary =l-tail=
   % ./l-tail --help
 #+end_example
 
