@@ -2,7 +2,8 @@ BasedOnStyle: GNU
 AlignConsecutiveMacros: true
 AlignConsecutiveAssignments: true
 AllowShortFunctionsOnASingleLine: false
+InsertBraces: true
 PointerAlignment: Right
 IndentWidth: 3
-ColumnLimit: 100
-InsertBraces: true
+ColumnLimit: 80
+

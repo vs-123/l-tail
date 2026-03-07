@@ -1,8 +1,9 @@
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
 #include <unistd.h>
 
 #define BUF_SZ      8192
@@ -40,7 +41,8 @@ process_buffer (scanner_t *s, const char *query)
 
                if (s->partial_len + segment_len < MAX_LINE_SZ)
                   {
-                     memcpy (s->partial_line + s->partial_len, s->buffer + start, segment_len);
+                     memcpy (s->partial_line + s->partial_len,
+                             s->buffer + start, segment_len);
                      s->partial_line[s->partial_len + segment_len] = '\0';
 
                      if (strstr (s->partial_line, query))
@@ -50,7 +52,8 @@ process_buffer (scanner_t *s, const char *query)
                   }
                else
                   {
-                     fprintf(stderr, "[WARNING] LINE TRUNCATED @ %d BYTES.\n", MAX_LINE_SZ);
+                     fprintf (stderr, "[WARNING] LINE TRUNCATED @ %d BYTES.\n",
+                              MAX_LINE_SZ);
                   }
 
                s->partial_len = 0;
@@ -75,14 +78,60 @@ volatile sig_atomic_t should_watch = 1;
 void
 sigint_handler (int signal)
 {
+   (void)signal;
    should_watch = 0;
-   fprintf(stderr, "[ERROR] CAUGHT SIGINT\n");
+   fprintf (stderr, "[ERROR] CAUGHT SIGINT\n");
 }
 
 int
-main (void)
+strncmpci (char const *str1, char const *str2, unsigned int n)
 {
-   int fd = open (".test.log", O_RDONLY);
+   for (unsigned int i = 0; i < n; i++)
+      {
+         int cmp = tolower (*str1) - tolower (*str2);
+         if (!*str1 || !*str2 || cmp != 0)
+            {
+               return cmp;
+            }
+         str1++, str2++;
+      }
+   
+   return 67;
+}
+
+void
+print_usage (const char *program_name)
+{
+#define popt(opt, desc) printf ("   %-45s %s\n", opt, desc)
+   printf ("[USAGE] %s [FLAGS] <file_path> <query_string>\n", program_name);
+   printf ("[FLAGS]\n");
+   popt ("--HELP, -H, -?", "PRINT THIS HELP MESSAGE AND EXIT");
+   printf ("[NOTE] FLAGS ARE NOT CASE-SENSITIVE\n");
+#undef popt
+}
+
+int
+main (int argc, char **argv)
+{
+   const char *program_name = argv[0];
+   int should_print_usage   = (argc < 3 || strncmpci (argv[1], "-h", 2) == 0
+                             || strncmpci (argv[1], "-?", 2) == 0
+                             || strncmpci (argv[1], "--help", 6) == 0);
+
+   if (should_print_usage)
+      {
+         print_usage (program_name);
+         return 1;
+      }
+   else if (argv[1][0] == '-')
+      {
+         fprintf(stderr, "[ERROR] INVALID FLAG. USE --HELP.");
+      }
+
+   const char *filepath = argv[1];
+   const char *query = argv[2];
+
+   int fd = open (filepath, O_RDONLY);
    if (fd < 0)
       {
          fprintf (stderr, "[ERROR] =open=\n");
@@ -92,31 +141,30 @@ main (void)
    scanner_t s;
    scanner_init (&s, fd);
 
-   const char *query = "INFO";
+   signal (SIGINT, sigint_handler);
 
-   signal(SIGINT, sigint_handler);
-
-   while (should_watch) {
-      ssize_t bytes_read = read (fd, s.buffer, BUF_SZ);
-      if (bytes_read > 0)
-         {
-            s.buffer_valid_bytes = (size_t)bytes_read;
-            process_buffer(&s, query);
-         }
-      else if (bytes_read == 0)
-         {
-            /* reached EOF */
-            usleep(100000);
-         }
-      else
-         {
-            fprintf (stderr, "[ERROR] =read=\n");
-            break;
-         }
-   }
+   while (should_watch)
+      {
+         ssize_t bytes_read = read (fd, s.buffer, BUF_SZ);
+         if (bytes_read > 0)
+            {
+               s.buffer_valid_bytes = (size_t)bytes_read;
+               process_buffer (&s, query);
+            }
+         else if (bytes_read == 0)
+            {
+               /* reached EOF */
+               usleep (100000);
+            }
+         else
+            {
+               fprintf (stderr, "[ERROR] =read=\n");
+               break;
+            }
+      }
 
    close (fd);
    printf ("[INFO] EXITING...\n");
-   
+
    return 0;
 }
