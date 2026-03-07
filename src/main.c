@@ -84,12 +84,24 @@ main (void)
 
    const char *query = "INFO";
 
-   ssize_t bytes_read;
-   while ((bytes_read = read (fd, s.buffer, BUF_SZ)) > 0)
-      {
-         s.buffer_valid_bytes = (size_t)bytes_read;
-         process_buffer (&s, query);
-      }
+   while (1) {
+      ssize_t bytes_read = read (fd, s.buffer, BUF_SZ);
+      if (bytes_read > 0)
+         {
+            s.buffer_valid_bytes = (size_t)bytes_read;
+            process_buffer(&s, query);
+         }
+      else if (bytes_read == 0)
+         {
+            /* reached EOF */
+            usleep(100'000);
+         }
+      else
+         {
+            fprintf (stderr, "[ERROR] =read=");
+            break;
+         }
+   }
 
    close (fd);
    return 0;
