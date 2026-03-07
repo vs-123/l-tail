@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 #define BUF_SZ      8192
-#define MAX_LINE_SZ 65536
+#define MAX_LINE_SZ 262144
 
 typedef struct
 {
@@ -47,6 +47,10 @@ process_buffer (scanner_t *s, const char *query)
                            printf ("%s\n", s->partial_line);
                         }
                   }
+               else
+                  {
+                     fprintf(stderr, "[WARNING] LINE TRUNCATED @ %d BYTES.", MAX_LINE_SZ);
+                  }
 
                s->partial_len = 0;
                start          = i + 1;
@@ -58,6 +62,10 @@ process_buffer (scanner_t *s, const char *query)
       {
          memcpy (s->partial_line + s->partial_len, s->buffer + start, rem);
          s->partial_len += rem;
+      }
+   else
+      {
+         s->partial_len = MAX_LINE_SZ;
       }
 }
 
