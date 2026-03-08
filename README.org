@@ -83,7 +83,7 @@ The repository provides two utility scripts located in the =scripts/= directory 
 
 This tool was developed as a focused solution for a specific set of requirements within my personal workflow. It is not intended to replace mature, feature-rich utilities like =grep=, =sed=, =awk=, etc. which offer significantly broader functionality and handle a wider array of edge cases.
 
-This project serves as a demonstration of memory-efficient, POSIX-compliant C99 programming rather than a competitive alternative to established tools. It is recommended to use it for its intended purpose i.e. stream monitoring and simple string matching, with the understanding that it is a specialised utility not a general-purpose replacement.
+This project serves as a demonstration of memory-efficient, POSIX-compliant C99 programming rather than a competitive alternative to established tools. It is recommended to use it for its intended purpose i.e. stream monitoring and simple string matching, with the understanding that it is a specialised utility and not a general-purpose replacement.
 
 ** LICENSE
 
