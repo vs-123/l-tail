@@ -45,6 +45,7 @@ The test measures the maximum resident set size during execution. This represent
 
 % ls -l .test.log
 -rw-r--r-- 1 vs  vs   1.0G  7 Mar 03:10 .test.log
+
 % sh ../scripts/run-bench.sh 
 [INFO] BENCHMARKING L-TAIL...
 [INFO] BENCHMARKING GREP...
