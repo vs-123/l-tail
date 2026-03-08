@@ -65,7 +65,7 @@ The test measures the maximum resident set size during execution. This represent
 
 *** OBSERVATIONS
 
-- *RESIDENT SET SIZE* -- Judging by the output, =l-tail= consistently maintains a lower peak memory footprint compared to =grep=. =l-tail='s memory usage remains stable even as the input file grows to gigabyte-scale proportions due to the utilisation of a fixed-size buffer and explicitly avoiding the allocation of large data structures.
+- *RESIDENT SET SIZE* -- Judging by the output, =l-tail= consistently maintains a lower peak memory footprint compared to =grep=. =l-tail='s memory usage remains stable even as the input file grows to gigabyte-scale proportions. This is achieved as a result of the utilisation of a fixed-size buffer and explicitly avoiding the allocation of large data structures.
 
 - *INSTRUCTION EFFICIENCY* -- =l-tail= completes the scan by retiring signifcantly fewer instructions (~49 billion vs. ~71 billion as seen from the output). This implies our implementation is highly optimised for the specific task of newline-delimited log scanning.
 
@@ -78,6 +78,12 @@ The repository provides two utility scripts located in the =scripts/= directory 
 - *gen-test.sh* -- Uses a short =perl= script to generate 1 GB of synthetic log file. This creates a continuous stream of entries and ensures that the test environment remains consistent across multiple runs.
 
 - *run-bench.sh* -- Utilises =/usr/bin/time -l= to capture detailed resource statistics during the execution of both =l-tail= and =grep=. These metrics are piped into individual text files to provide the comparative data as presented above.
+
+** DISCLAIMER
+
+This tool was developed as a focused solution for a specific set of requirements within my personal workflow. It is not intended to replace mature, feature-rich utilities like =grep=, =sed=, =awk=, etc. which offer significantly broader functionality and handle a wider array of edge cases.
+
+This project serves as a demonstration of memory-efficient, POSIX-compliant C99 programming rather than a competitive alternative to established tools. It is recommended to use it for its intended purpose i.e. stream monitoring and simple string matching, with the understanding that it is a specialised utility not a general-purpose replacement.
 
 ** LICENSE
 
