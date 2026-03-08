@@ -81,21 +81,21 @@ process_buffer (scanner_t *s, const char *query)
          else
             {
                fprintf (stderr,
-                        "[WARNING] LINE TRUNCATED AS IT EXCEEDS %d BYTES.\n",
+                        "[L-TAIL WARNING] LINE TRUNCATED AS IT EXCEEDS %d BYTES.\n",
                         MAX_LINE_SZ);
                s->partial_len = MAX_LINE_SZ;
             }
       }
 }
 
-volatile sig_atomic_t should_watch = 1;
+volatile sig_atomic_t should_poll = 1;
 
 void
 sigint_handler (int signal)
 {
    (void)signal;
-   should_watch = 0;
-   fprintf (stderr, "[ERROR] CAUGHT SIGINT\n");
+   should_poll = 0;
+   fprintf (stderr, "[L-TAIL ERROR] CAUGHT SIGINT\n");
 }
 
 int
@@ -118,10 +118,12 @@ void
 print_usage (const char *program_name)
 {
 #define popt(opt, desc) printf ("   %-45s %s\n", opt, desc)
-   printf ("[USAGE] %s [FLAGS] <file_path> <query_string>\n", program_name);
+   printf ("[USAGE] %s [FLAGS] [<FILE_PATH> <QUERY_STRING>]\n", program_name);
    printf ("[FLAGS]\n");
    popt ("--HELP, -H, -?", "PRINT THIS HELP MESSAGE AND EXIT");
    popt ("--INFO, -I", "PRINT INFORMATION ABOUT THIS PROGRAM AND EXIT");
+   popt ("--ONCE, -O <FILE_PATH> <QUERY_STRING>",
+         "DISABLE POLLING, TERMINATE UPON REACHING EOF");
    printf ("[NOTE] FLAGS ARE NOT CASE-SENSITIVE\n");
 #undef popt
 }
@@ -146,6 +148,9 @@ int
 main (int argc, char **argv)
 {
    const char *program_name = argv[0];
+   char *filepath           = argv[1];
+   char *query              = argv[2];
+   int should_pass_once     = 0;
 
    if (argc < 2)
       {
@@ -165,19 +170,29 @@ main (int argc, char **argv)
          print_info ();
          return 0;
       }
-   else if (argv[1][0] == '-')
+   else if (argc < 4)
       {
-         fprintf (stderr, "[ERROR] INVALID FLAG. USE --HELP.\n");
+         fprintf (stderr, "[L-TAIL ERROR] MALFORMED ARGUMENTS, USE --HELP\n");
          return 1;
       }
+   else if (strncmpci (argv[1], "-o", 2) == 0
+            || strncmpci (argv[1], "--once", 6) == 0)
+      {
 
-   const char *filepath = argv[1];
-   const char *query    = argv[2];
+         filepath         = argv[2];
+         query            = argv[3];
+         should_pass_once = 1;
+      }
+   else if (argv[1][0] == '-')
+      {
+         fprintf (stderr, "[L-TAIL ERROR] INVALID FLAG, USE --HELP\n");
+         return 1;
+      }
 
    int fd = open (filepath, O_RDONLY);
    if (fd < 0)
       {
-         fprintf (stderr, "[ERROR] =open=\n");
+         fprintf (stderr, "[L-TAIL ERROR] COULD NOT OPEN\n");
          return 1;
       }
 
@@ -186,7 +201,7 @@ main (int argc, char **argv)
 
    signal (SIGINT, sigint_handler);
 
-   while (should_watch)
+   while (should_poll)
       {
          ssize_t bytes_read = read (fd, s.buffer, BUF_SZ);
          if (bytes_read > 0)
@@ -197,17 +212,21 @@ main (int argc, char **argv)
          else if (bytes_read == 0)
             {
                /* reached EOF */
+               if (should_pass_once)
+                  {
+                     break;
+                  };
                usleep (100000);
             }
          else
             {
-               fprintf (stderr, "[ERROR] =read=\n");
+               fprintf (stderr, "[L-TAIL ERROR] COULD NOT READ\n");
                break;
             }
       }
 
    close (fd);
-   printf ("[INFO] EXITING...\n");
+   printf ("[L-TAIL INFO] EXITING...\n");
 
    return 0;
 }
