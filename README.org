@@ -74,7 +74,7 @@ The test measures the maximum resident set size during execution. This represent
 
 *** REPRODUCIBILITY
 
-The repository provides two utility scripts located in the =scripts/= directory -- =gen-test.sh= and =run-bench.sh= -- to allow for independent verification of these results.
+This repository provides two utility scripts located in the =scripts/= directory -- =gen-test.sh= and =run-bench.sh= -- to allow for independent verification of these results.
 
 - *gen-test.sh* -- Uses a short =perl= script to generate 1 GB of synthetic log file. This creates a continuous stream of entries and ensures that the test environment remains consistent across multiple runs.
 
