@@ -1,0 +1,119 @@
+:em: {sp}--{sp}
+
+= L-TAIL
+
+L-Tail is a memory-efficient, POSIX-compliant, high-performance, log-scanning utility tool for stream monitoring written in C99. This project utilises buffered I/O and non-blocking polling to provide real-time stream monitoring with a minimal resident set size.
+
+*L-Tail* stands for *Log-Tail*.
+
+== FEATURES
+
+* *FIXED MEMORY FOOTPRINT* {em} Operates with a constant memory overhead of =O(1)= space complexity relative to file size. This is achieved by processing the stream in fixed-size chunks and prevents system performance degradation when scanning gigabyte-scale log files.
+
+* *BUFFERED STREAM PROCESSING* {em} Implements a custom buffering mechanism that handles partial line segments across read boundaries. This ensures data integrity for logs with multi-line payloads or irregular record lengths.
+
+* *NON-BLOCKING POLLING* {em} Equipped with a non-blocking mode similar to =tail -f=. This mode periodically polls file descriptor for new content, which allows for live monitoring WITHOUT relying on platform-specific kernel event APIs like =inotify= or =kqueue=.
+
+* *POSIX COMPLIANT* {em} Developed in C99 without any GNU extensions. This ensures high portability across various *nix systems without relying on external dependencies.
+
+== BUILD INSTRUCTIONS
+
+Obtain a local copy of this repository with `git clone` and enter it
+[source,]
+----
+  %  git clone https://github.com/vs-123/l-tail.git
+  %  cd l-tail
+----
+
+*CMAKE METHOD*
+
+Create a `build` directory and build this project with `cmake` inside it
+[source,]
+----
+  %  mkdir build && cd build
+  %  cmake ..
+  %  cmake --build .
+  %  ls -Fa
+  ./  ../  l-tail*  compile_commands.json  Makefile  CMakeCache.txt
+----
+
+*MANUAL METHOD*
+
+Create a `build` directory to keep things tidy, and then use your favourite compiler to compile the source code.
+[source,]
+----
+  %  mkdir build && cd build
+  %  cc -o l-tail ../src/main.c
+  %  ls -F
+  l-tail*
+----
+
+You may now use the generated binary `l-tail`
+[source,]
+----
+  %  ./l-tail --help
+----
+
+== BENCHMARK
+
+The following benchmark demonstrates the memory efficiency of `l-tail` against standard system `grep` utility using a log file of 1 GB. This was run on FreeBSD.
+
+The test measures the maximum resident set size during execution. This represents the peak physical memory consumed by the process throughout its entire lifecycle.
+
+[source,]
+----
+  %  sh ../scripts/gen-test.sh
+  [INFO] GENERATING .test.log...
+  [SUCCESS] DONE
+  
+  %  ls -l .test.log
+  -rw-r--r-- 1 vs  vs   1.0G  7 Mar 03:10 .test.log
+  
+  %  sh ../scripts/run-bench.sh 
+  [INFO] BENCHMARKING L-TAIL...
+  [INFO] BENCHMARKING GREP...
+  [RESULTS]
+  ===  L-TAIL  ===
+          2.50 real         1.68 user         0.11 sys
+               1409024  maximum resident set size
+           49037728463  instructions retired
+            7405080816  cycles elapsed
+               1048888  peak memory footprint
+  ===  GREP  ===
+          2.92 real         2.83 user         0.08 sys
+               1540096  maximum resident set size
+           71870882677  instructions retired
+           12347675223  cycles elapsed
+               1212632  peak memory footprint
+----
+
+=== OBSERVATIONS
+
+* *RESIDENT SET SIZE* {em} Judging by the output, `l-tail` consistently maintains a lower peak memory footprint compared to `grep`. `l-tail`'s memory usage remains stable even as the input file grows to gigabyte-scale proportions. This is achieved as a result of the utilisation of a fixed-size buffer and explicitly avoiding the allocation of large data structures.
+
+* *INSTRUCTION EFFICIENCY* {em} `l-tail` completes the scan by retiring signifcantly fewer instructions (~49 billion vs. ~71 billion as seen from the output). This implies our implementation is highly optimised for the specific task of newline-delimited log scanning.
+
+* *REAL-TIME THROUGHPUT* {em} The lower `cycles elapsed` and shorter `real` time indicates that `l-tail` is more efficient in its CPU usage for this specific workload and hence provides faster results whilst consuming fewer system resources.
+
+=== REPRODUCIBILITY
+
+This repository provides two utility scripts located in the `scripts/` directory -- `gen-test.sh` and `run-bench.sh` -- to allow for independent verification of these results.
+
+* *gen-test.sh* {em} Uses a short `perl` script to generate 1 GB of synthetic log file. This creates a continuous stream of entries and ensures that the test environment remains consistent across multiple runs.
+
+* *run-bench.sh* {em} Utilises `/usr/bin/time -l` to capture detailed resource statistics during the execution of both `l-tail` and `grep`. These metrics are piped into individual text files to provide the comparative data as presented above.
+
+== DISCLAIMER
+
+This tool was developed as a focused solution for a specific set of requirements within my personal workflow. It is not intended to replace mature, feature-rich utilities like `grep`, `sed`, `awk`, etc. which offer significantly broader functionality and handle a wider array of edge cases.
+
+This project serves as a demonstration of memory-efficient, POSIX-compliant C99 programming rather than a competitive alternative to established tools. It is recommended to use it for its intended purpose i.e. stream monitoring and simple string matching, with the understanding that it is a specialised utility and not a general-purpose replacement.
+
+== LICENSE
+
+This project is licensed under the *GNU Affero General Public License version 3.0 or later*.
+
+*NO WARRANTY PROVIDED*
+
+For more information, see `LICENSE` file or visit https://www.gnu.org/licenses/agpl-3.0.en.html.
+
